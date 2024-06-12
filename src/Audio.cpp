@@ -2429,11 +2429,10 @@ void Audio::loop() {
         switch(getDatamode()) {
 
 #ifndef AUDIO_NO_SD_FS
-            case AUDIO_LOCALFILE: processLocalFile(); break;
-#endif  // AUDIO_NO_SD_FS
             case AUDIO_LOCALFILE:
                 if(m_validSamples) {playChunk(true); break;}
                 processLocalFile(); break;
+            #endif  // AUDIO_NO_SD_FS
             case HTTP_RESPONSE_HEADER: parseHttpResponseHeader(); break;
             case AUDIO_PLAYLISTINIT: readPlayListData(); break;
             case AUDIO_PLAYLISTDATA:
