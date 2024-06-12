@@ -2427,15 +2427,13 @@ void Audio::loop() {
 
     if(m_playlistFormat != FORMAT_M3U8) { // normal process
         switch(getDatamode()) {
-<<<<<<< HEAD
+
 #ifndef AUDIO_NO_SD_FS
             case AUDIO_LOCALFILE: processLocalFile(); break;
 #endif  // AUDIO_NO_SD_FS
-=======
             case AUDIO_LOCALFILE:
                 if(m_validSamples) {playChunk(true); break;}
                 processLocalFile(); break;
->>>>>>> upstream/master
             case HTTP_RESPONSE_HEADER: parseHttpResponseHeader(); break;
             case AUDIO_PLAYLISTINIT: readPlayListData(); break;
             case AUDIO_PLAYLISTDATA:
