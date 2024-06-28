@@ -3,8 +3,8 @@
  *
  *  Created on: Oct 26.2018
  *
- *  Version 3.0.11c
- *  Updated on: Jun 13.2024
+ *  Version 3.0.11e
+ *  Updated on: Jun 23.2024
  *      Author: Wolle (schreibfaul1)
  *
  */
@@ -2329,7 +2329,7 @@ void Audio::playChunk(bool i2s_only) {
     int16_t validSamples = 0;
     static uint16_t count = 0;
     size_t i2s_bytesConsumed = 0;
-    int16_t* sample[2];
+    int16_t* sample[2] = {0};
     int16_t* s2;
     int sampleSize = (m_bitsPerSample / 8);
     esp_err_t err = ESP_OK;
@@ -2339,7 +2339,13 @@ void Audio::playChunk(bool i2s_only) {
         int i= 0;
         validSamples = m_validSamples;
         while(validSamples){
-            *sample = m_outBuff + i;
+            if(m_channels == 1){  // mono
+                sample[LEFTCHANNEL]  = (m_outBuff + i);
+                sample[RIGHTCHANNEL] = (m_outBuff + i);
+            }
+            if(m_channels == 2){
+                *sample = m_outBuff + i;
+            }
             if(m_bitsPerSample == 16){
                 computeVUlevel(*sample);
 
@@ -2354,7 +2360,12 @@ void Audio::playChunk(bool i2s_only) {
                 IIR_filterChain2(*sample);
                 //------------------------------------------------------------------
                 Gain(*sample);
-                i += 2;
+		        if(m_f_internalDAC){
+		            s2 = *sample;
+		            s2[LEFTCHANNEL] += 0x8000;
+		            s2[RIGHTCHANNEL]+= 0x8000;
+		        }
+                i += m_channels;
             }
             else{ // 8 bit per sample
                 Gain(*sample);
@@ -2433,7 +2444,11 @@ void Audio::loop() {
                 if(m_validSamples) {playChunk(true); break;}
                 processLocalFile(); break;
             #endif  // AUDIO_NO_SD_FS
-            case HTTP_RESPONSE_HEADER: parseHttpResponseHeader(); break;
+            case HTTP_RESPONSE_HEADER:
+                if(!parseHttpResponseHeader()) {
+                    if(m_f_timeout) connecttohost(m_lastHost);
+                }
+                break;
             case AUDIO_PLAYLISTINIT: readPlayListData(); break;
             case AUDIO_PLAYLISTDATA:
                 if(m_playlistFormat == FORMAT_M3U) connecttohost(parsePlaylist_M3U());
